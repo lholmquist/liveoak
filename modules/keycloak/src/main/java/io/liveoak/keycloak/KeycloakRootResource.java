@@ -9,6 +9,7 @@ import io.liveoak.spi.resource.async.Responder;
 import org.jboss.logging.Logger;
 import org.keycloak.models.KeycloakSession;
 import org.keycloak.models.RealmModel;
+import org.keycloak.models.utils.ModelProviderUtils;
 import org.keycloak.representations.idm.ApplicationRepresentation;
 import org.keycloak.representations.idm.CredentialRepresentation;
 import org.keycloak.representations.idm.RealmRepresentation;
@@ -81,6 +82,15 @@ public class KeycloakRootResource implements RootResource {
     public void initialize(ResourceContext context) throws InitializationException {
         ClassLoader cl = Thread.currentThread().getContextClassLoader();
         try {
+            // Have mongo model to be used by default TODO: Remove this once multitenancy is finished and it will be more clear how to properly configure it
+            if (System.getProperty(ModelProviderUtils.MODEL_PROVIDER) == null) {
+                System.setProperty(ModelProviderUtils.MODEL_PROVIDER, "mongo");
+            }
+            // Just to use same DB as storage resource TODO: remove
+            if (System.getProperty("mongo.db") == null) {
+                System.setProperty("mongo.db", "mboss");
+            }
+
             // TODO Remove once fixed in Keycloak
             Thread.currentThread().setContextClassLoader(KeycloakServer.class.getClassLoader());
             log.infof("Going to bootstrap undertow on %s:%d", host, port);
@@ -94,7 +104,7 @@ public class KeycloakRootResource implements RootResource {
             }
 
             if (realmRepresentation == null) {
-                log.infof("Realm representation is null. Skiping realm initialization");
+                log.infof("Realm representation is null. Skipping realm initialization");
             } else {
                 try {
                     initRealm();

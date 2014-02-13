@@ -19,6 +19,7 @@ import org.keycloak.services.filters.KeycloakSessionServletFilter;
 import org.keycloak.services.managers.ApplianceBootstrap;
 import org.keycloak.services.managers.RealmManager;
 import org.keycloak.services.resources.KeycloakApplication;
+import org.keycloak.services.tmp.TmpAdminRedirectServlet;
 
 import javax.servlet.DispatcherType;
 import java.io.IOException;
@@ -92,9 +93,13 @@ public class KeycloakServer {
         deploymentInfo.addFilter(filter);
         deploymentInfo.addFilterUrlMapping("SessionFilter", "/rest/*", DispatcherType.REQUEST);
 
+        ServletInfo tmpAdminRedirectServlet = Servlets.servlet("TmpAdminRedirectServlet", TmpAdminRedirectServlet.class);
+        tmpAdminRedirectServlet.addMappings("/admin", "/admin/");
+        deploymentInfo.addServlet(tmpAdminRedirectServlet);
+
         undertow.deploy(deploymentInfo);
 
-        factory = KeycloakApplication.createSessionFactory();
+        factory = ((KeycloakApplication)deployment.getApplication()).getFactory();
 
         setupDefaultRealm();
     }
